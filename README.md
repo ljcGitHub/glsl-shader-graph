@@ -1,1 +1,9 @@
-# glsl-shader-graph
+# 仿shader graph编辑器(生成glsl代码）
+
+------
+
+> * vue编写界面
+> * 支持快捷键
+> * 在线可视化调试，导出glsl代码
+> * 支持自定义节点
+
