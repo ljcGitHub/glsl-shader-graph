@@ -53,7 +53,7 @@ export default {
 @import '~common/style/variable';
 
 .line {
-  stroke-width: 3;
+  stroke-width: 2;
   fill: none;
 
   &.vec1 {
@@ -74,12 +74,6 @@ export default {
 
   &:hover {
     cursor: pointer;
-    stroke: #fff;
-  }
-
-  &.active {
-    cursor: pointer;
-    stroke-width: 4;
     stroke: #fff;
   }
 }

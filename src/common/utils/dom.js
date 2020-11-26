@@ -47,11 +47,11 @@ export function hasClass(el, className) {
   return el.classList.contains(className)
 }
 
-export function addClass (el, className) {
+export function addClass(el, className) {
   el.classList.add(className)
 }
 
-export function removeClass (el, className) {
+export function removeClass(el, className) {
   el.classList.remove(className)
 }
 
@@ -69,4 +69,29 @@ export const removeEvent = function (el, type, fn, capture) {
   } else {
     el.detachEvent('on' + type, fn)
   }
+}
+
+export const mouseScroll = function (callback) {
+  const scrollFunc = function (arg) {
+    const e = arg || window.event
+    let direction = 0
+    if (e.wheelDelta) { // 判断浏览器IE，谷歌滑轮事件
+      if (e.wheelDelta > 0) { // 当滑轮向上滚动时
+        direction = 1
+      }
+      if (e.wheelDelta < 0) { // 当滑轮向下滚动时
+        direction = -1
+      }
+    } else if (e.detail) { // Firefox滑轮事件
+      if (e.detail > 0) { // 当滑轮向下滚动时
+        direction = -1
+      }
+      if (e.detail < 0) { // 当滑轮向上滚动时
+        direction = 1
+      }
+    }
+    callback && callback(direction)
+  }
+  document.addEventListener('DOMMouseScroll', scrollFunc, false)
+  window.onmousewheel = scrollFunc
 }

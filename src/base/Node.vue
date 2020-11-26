@@ -3,7 +3,7 @@
     class="card"
     :id="value.uid"
     :style="cardStyle"
-    :class="{active: $state.selectNodes.includes(value.uid)}"
+    :class="{ active: $state.selectNodes.includes(value.uid) }"
     ref="card"
   >
     <el-card shadow="never">
@@ -46,7 +46,9 @@
               :uid="`${value.uid}-output-${output.vec}-${$index}`"
               type="output"
               ref="output"
-              @vectorStart="(e, uid) => vectorStart(e, uid, output.vec, 'output')"
+              @vectorStart="
+                (e, uid) => vectorStart(e, uid, output.vec, 'output')
+              "
               @vectorMore="(e, uid) => vectorMore(e, uid, output.vec, 'output')"
               @vectorEnd="(e, uid) => vectorEnd(e, uid, output.vec, 'output')"
             ></Vector>
@@ -104,7 +106,10 @@ export default {
     cardStyle() {
       const zIndex = this.$state.selectNodes.includes(this.value.uid) ? '10' : ''
       const transformCss = `translate(${this.value.x}px, ${this.value.y}px`
-      return `${[style.transform]}: ${transformCss}); zIndex: ${zIndex}`
+      return `${[style.transform]}: ${transformCss}; zIndex: ${zIndex}`
+    },
+    scale() {
+      return this.$state.config.scale
     },
     inputStyle() {
       if (!this.more) return `height: 0px;margin: 0;padding: 0;`
@@ -137,8 +142,20 @@ export default {
       this.$nextTick(() => this.uploadAllLine())
     },
     start(e) {
-      this.$state.selectNodeTag = true
-      this.$mutations.selectNode(this.value.uid)
+      this.$state.selectNodeId = this.value.uid
+      if (!this.$state.selectNodes.includes(this.value.uid)) {
+        // 之前没选中当前节点
+        this.$mutations.selectNode(this.value.uid)
+        // 选中了节点，判断是否叠加其他选中节点
+        if (!e.shiftKey) {
+          this.$mutations.radioSelectNode(this.$state.selectNodeId)
+        }
+      } else {
+        // 有其他选中节点， 判断是否叠加其他选中节点，还是单选
+        if (e.shiftKey) {
+          this.$mutations.eliminateSelectNode(this.value.uid)
+        }
+      }
       this.$bus.$emit('start', e)
     },
     move(e) {
@@ -268,17 +285,40 @@ export default {
             for (let j = 0; j < nodes.length; j++) {
               const oldNode = nodes[j]
               if (oldNode.uid === oldTargetUidNodeUid) {
-                delete oldNode.vector[oldTargetUid]
+                const _vector = oldNode.vector[oldTargetUid]
+                if (_vector.constructor === Array) {
+                  for (let k = 0; k < _vector.length; k++) {
+                    const _outputs = _vector[k]
+                    if (_outputs.target === targetUid) {
+                      _vector.splice(k, 1)
+                      break
+                    }
+                  }
+                  if (_vector.length === 0) delete oldNode.vector[oldTargetUid]
+                } else {
+                  delete oldNode.vector[oldTargetUid]
+                }
                 break
               }
             }
           }
-          node.vector[targetUid] = {
-            lineUid: liningUid,
-            type: targetType,
-            vec: targetVec,
-            source: targetUid,
-            target: sourceUid
+          if (targetType === 'output') {
+            if (!node.vector[targetUid]) node.vector[targetUid] = []
+            node.vector[targetUid].push({
+              lineUid: liningUid,
+              type: targetType,
+              vec: targetVec,
+              source: targetUid,
+              target: sourceUid
+            })
+          } else {
+            node.vector[targetUid] = {
+              lineUid: liningUid,
+              type: targetType,
+              vec: targetVec,
+              source: targetUid,
+              target: sourceUid
+            }
           }
           break
         }
@@ -299,12 +339,17 @@ export default {
       const vector = this.value.vector
       const lining = createLink({ vec: 1, uid: guid(), pos: [0, 1, 2, 2] })
       for (const x in vector) {
-        const item = vector[x]
-        const line = document.getElementById(item.lineUid)
-        if (line) {
-          const pos1 = getVeotorRect(document.getElementById(item.source))
-          const pos2 = getVeotorRect(document.getElementById(item.target))
-          line.setAttribute('d', lining.calcPath(pos1.x, pos1.y, pos2.x, pos2.y))
+        const _vector = vector[x]
+        let list = _vector
+        if (_vector.constructor !== Array) list = [_vector]
+        for (let i = 0; i < list.length; i++) {
+          const item = list[i]
+          const line = document.getElementById(item.lineUid)
+          if (line) {
+            const pos1 = getVeotorRect(document.getElementById(item.source))
+            const pos2 = getVeotorRect(document.getElementById(item.target))
+            line.setAttribute('d', lining.calcPath(pos1.x, pos1.y, pos2.x, pos2.y))
+          }
         }
       }
       lining.$destroy()
@@ -348,6 +393,9 @@ export default {
   },
   watch: {
     cardStyle() {
+      this.uploadAllLine()
+    },
+    scale() {
       this.uploadAllLine()
     }
   }

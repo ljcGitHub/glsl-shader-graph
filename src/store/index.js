@@ -7,12 +7,13 @@ const copy = function (data) {
 
 const state = Vue.observable({
   config: {
+    scale: 1,
     language: 'zh', // zh en
     lineStyle: 'straight-line' // straight-line直线 curve-line曲线
   },
   loading: 0,
   selectNodes: [],
-  selectNodeTag: false, // 是否选中了节点
+  selectNodeId: '', // 选中了节点Id
   nodes: [] // 节点
 })
 
@@ -45,6 +46,12 @@ const mutations = {
   },
   clearSelectNode() {
     state.selectNodes = []
+  },
+  radioSelectNode(uid) {
+    state.selectNodes = state.selectNodes.filter(nodeUid => nodeUid === uid)
+  },
+  eliminateSelectNode(uid) {
+    state.selectNodes = state.selectNodes.filter(nodeUid => nodeUid !== uid)
   },
   setNodes(val) {
     state.selectNodes = []

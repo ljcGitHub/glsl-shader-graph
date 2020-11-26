@@ -7,15 +7,33 @@
       @mouseleave="rightMenuHide"
     >
       <div class="right-click-title">右键菜单</div>
-      <div class="right-click-item" @click="copyNode"><span>复制</span><span>C</span></div>
-      <div class="right-click-item" @click="pasteNode"><span>粘贴</span><span>V</span></div>
-      <div class="right-click-item" @click="deleteNode"><span>删除</span><span>X</span></div>
+      <div style="padding: 10px 0;">
+        <div class="right-click-item" @click="allNode">
+          <span>全选</span><span>A</span>
+        </div>
+        <div class="right-click-item" @click="copyNode">
+          <span>复制</span><span>C</span>
+        </div>
+        <div class="right-click-item" @click="pasteNode">
+          <span>粘贴</span><span>V</span>
+        </div>
+        <div class="right-click-item" @click="deleteNode">
+          <span>删除</span><span>X</span>
+        </div>
+        <div class="right-click-line"></div>
+        <div class="right-click-item" @click="prevStep">
+          <span>上一步</span><span>Z</span>
+        </div>
+        <div class="right-click-item" @click="nextStep">
+          <span>下一步</span><span>Shift+Z</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { addEvent } from 'common/utils/dom'
+import { addEvent, mouseScroll } from 'common/utils/dom'
 import { guid } from 'common/utils/utils'
 
 export default {
@@ -30,9 +48,16 @@ export default {
   created() {
     this.rightMenuHandle()
     this.documentClick()
+    this.documentKey()
     this.$bus.$on('start', this.start)
     this.$bus.$on('move', this.move)
     this.$bus.$on('end', this.end)
+    mouseScroll((e) => {
+      const value = e * 0.1
+      let scale = this.$state.config.scale + value
+      scale = Math.max(0.6, Math.min(1.8, scale))
+      this.$state.config.scale = scale
+    })
   },
   computed: {
     menuStyle() {
@@ -76,12 +101,40 @@ export default {
     },
     documentClick() {
       const that = this
-      addEvent(document, 'mouseup', function(e) {
+      addEvent(document, 'mouseup', function (e) {
         if (e.button === 2 || that.rightMenuVisible) return false
-        if (!that.$state.selectNodeTag) {
+        if (!that.$state.selectNodeId) {
           that.$mutations.clearSelectNode()
         }
-        that.$state.selectNodeTag = false
+        that.$state.selectNodeId = ''
+      })
+    },
+    documentKey() {
+      addEvent(document, 'keyup', (e) => {
+        const key = e.key.toLocaleUpperCase()
+        switch (key) {
+          case 'A':
+            this.allNode() // 全选
+            break
+          case 'C':
+            this.copyNode() // 复制
+            break
+          case 'V':
+            this.pasteNode() // 粘贴
+            break
+          case 'X':
+            this.deleteNode() // 删除
+            break
+          case 'Z':
+            if (e.shiftKey) {
+              this.nextStep() // 代码前进
+            } else {
+              this.prevStep() // 代码后退
+            }
+            break
+          default:
+            break
+        }
       })
     },
     rightMenuHandle() {
@@ -103,6 +156,7 @@ export default {
         return false
       }
       this.copyNodes = this.$state.selectNodes.slice()
+      this.$message.success('复制成功')
     },
     pasteNode() {
       this.rightMenuHide()
@@ -135,6 +189,7 @@ export default {
       copyNodes = JSON.parse(copyNodesStr)
       this.$mutations.commit('addAllNodes', Object.keys(copyNodes).map(k => copyNodes[k]))
       this.$state.selectNodes = selectNodes
+      this.$message.success('粘贴成功')
     },
     deleteNode() {
       this.rightMenuHide()
@@ -145,6 +200,19 @@ export default {
       const nodes = this.$state.nodes.slice()
       const selectNodes = this.$state.selectNodes
       this.$mutations.commit('setNodes', nodes.filter(node => !selectNodes.includes(node.uid)))
+      this.$message.success('删除成功')
+    },
+    nextStep() {
+      this.rightMenuHide()
+      this.$mutations.nextStep() // 代码前进
+    },
+    prevStep() {
+      this.rightMenuHide()
+      this.$mutations.prevStep() // 代码后退
+    },
+    allNode() {
+      this.rightMenuHide()
+      this.$state.selectNodes = this.$state.nodes.map(node => node.uid)
     }
   }
 }
@@ -187,6 +255,13 @@ export default {
     &:hover {
       background-color: #547ab5;
     }
+  }
+
+  .right-click-line {
+    margin: 10px 0;
+    width: 100%;
+    height: 1px;
+    background-color: #dcdcdc;
   }
 }
 </style>

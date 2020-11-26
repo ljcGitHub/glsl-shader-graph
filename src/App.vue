@@ -6,13 +6,15 @@
         {{ `x:${node.x}, y:${node.y}, ${node.uid}`}}
       </div>
     </div>
-    <component
-      v-for="node in nodes"
-      :key="node.uid"
-      :is="node.name"
-      :value="node"
-      ref="node"
-    ></component>
+    <div class="node-wrapper" :style="scaleStyle">
+      <component
+        v-for="node in nodes"
+        :key="node.uid"
+        :is="node.name"
+        :value="node"
+        ref="node"
+      ></component>
+    </div>
     <Shortcuts></Shortcuts>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="svg">
       <Link
@@ -28,6 +30,7 @@
 
 <script>
 import { getVeotorRect } from 'common/utils/utils'
+import { style } from 'common/utils/dom'
 
 export default {
   name: 'app',
@@ -37,6 +40,9 @@ export default {
     },
     loading() {
       return this.$state.loading
+    },
+    scaleStyle() {
+      return `${[style.transform]}: scale(${this.$state.config.scale});`
     }
   },
   data() {
@@ -109,7 +115,15 @@ export default {
   z-index: -1;
 }
 
+.node-wrapper{
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
 .el-message{
   padding: 12px 12px;
+  min-width: inherit;
+  background-color: #fff;
 }
 </style>
