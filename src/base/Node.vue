@@ -5,7 +5,6 @@
     :style="cardStyle"
     :class="{active: $state.selectNodes.includes(value.uid)}"
     ref="card"
-    @mousedown="mousedown"
   >
     <el-card shadow="never">
       <div class="card-header" slot="header" ref="header">
@@ -63,7 +62,7 @@
 
 <script>
 import touchHandle from 'common/utils/touch'
-import { style, addEvent, removeEvent } from 'common/utils/dom'
+import { style } from 'common/utils/dom'
 import { guid, getVeotorRect } from 'common/utils/utils'
 import Vue from 'vue'
 import Link from 'base/Link'
@@ -103,7 +102,9 @@ export default {
   },
   computed: {
     cardStyle() {
-      return `${[style.transform]}: translate(${this.value.x}px, ${this.value.y}px)`
+      const zIndex = this.$state.selectNodes.includes(this.value.uid) ? '10' : ''
+      const transformCss = `translate(${this.value.x}px, ${this.value.y}px`
+      return `${[style.transform]}: ${transformCss}); zIndex: ${zIndex}`
     },
     inputStyle() {
       if (!this.more) return `height: 0px;margin: 0;padding: 0;`
@@ -115,22 +116,13 @@ export default {
     }
   },
   mounted() {
-    const that = this
     const touchHandleDestroy = touchHandle(this.$refs.header, {
       start: this.start,
       move: this.move,
       end: this.end
     })
-    const unselectNode = function() {
-      if (!that.checked) {
-        that.$mutations.clearSelectNode()
-      }
-      that.checked = false
-    }
-    addEvent(document, 'mousedown', unselectNode)
     this.$once('hook:beforeDestroy', () => {
       touchHandleDestroy()
-      removeEvent(document, 'mousedown', unselectNode)
     })
   },
   methods: {
@@ -144,26 +136,16 @@ export default {
       }
       this.$nextTick(() => this.uploadAllLine())
     },
-    mousedown(e) {
-      this.checked = true
-      this.$mutations.selectNode(this.value.uid)
-    },
     start(e) {
-      this.startX = this.value.x
-      this.startY = this.value.y
-      this.distanceX = e.pageX
-      this.distanceY = e.pageY
+      this.$state.selectNodeTag = true
+      this.$mutations.selectNode(this.value.uid)
+      this.$bus.$emit('start', e)
     },
     move(e) {
-      const distanceX = e.pageX - this.distanceX
-      const distanceY = e.pageY - this.distanceY
-      this.translate(this.startX + distanceX, this.startY + distanceY)
-      this.uploadAllLine()
+      this.$bus.$emit('move', e)
     },
     end(e) {
-      if (this.$refs.card) {
-        this.$refs.card.style.zIndex = ''
-      }
+      this.$bus.$emit('end', e)
     },
     translate(x, y) {
       if (this.$refs.card) {
@@ -319,9 +301,11 @@ export default {
       for (const x in vector) {
         const item = vector[x]
         const line = document.getElementById(item.lineUid)
-        const pos1 = getVeotorRect(document.getElementById(item.source))
-        const pos2 = getVeotorRect(document.getElementById(item.target))
-        line.setAttribute('d', lining.calcPath(pos1.x, pos1.y, pos2.x, pos2.y))
+        if (line) {
+          const pos1 = getVeotorRect(document.getElementById(item.source))
+          const pos2 = getVeotorRect(document.getElementById(item.target))
+          line.setAttribute('d', lining.calcPath(pos1.x, pos1.y, pos2.x, pos2.y))
+        }
       }
       lining.$destroy()
     },
@@ -362,7 +346,11 @@ export default {
       })
     }
   },
-  components: {}
+  watch: {
+    cardStyle() {
+      this.uploadAllLine()
+    }
+  }
 }
 
 </script>

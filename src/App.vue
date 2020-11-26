@@ -1,8 +1,10 @@
 <template>
   <div id="app">
     <BaseHeader></BaseHeader>
-    <div style="color: #fff" v-for="node in nodes" :key="node.uid + 's'">
-      {{ `x:${node.x}, y:${node.y}, ${node.uid}`}}
+    <div style="position: absolute;top: 40px;left: 0;z-index:-1">
+      <div style="color: #fff;" v-for="node in nodes" :key="node.uid + 's'">
+        {{ `x:${node.x}, y:${node.y}, ${node.uid}`}}
+      </div>
     </div>
     <component
       v-for="node in nodes"
@@ -105,5 +107,9 @@ export default {
   height: 100vh;
   overflow: hidden;
   z-index: -1;
+}
+
+.el-message{
+  padding: 12px 12px;
 }
 </style>

@@ -12,6 +12,7 @@ Vue.prototype.$ELEMENT = { size: 'small', zIndex: 3000 }
 Vue.use(Element)
 Vue.prototype.$state = Store.state
 Vue.prototype.$mutations = Store.mutations
+Vue.prototype.$bus = Store.bus
 
 for (const x in Components) {
   Vue.component(Components[x].name, Components[x])

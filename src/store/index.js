@@ -12,6 +12,7 @@ const state = Vue.observable({
   },
   loading: 0,
   selectNodes: [],
+  selectNodeTag: false, // 是否选中了节点
   nodes: [] // 节点
 })
 
@@ -24,6 +25,9 @@ const mutations = {
       uid: guid(),
       vector: {}
     })
+  },
+  addAllNodes(params) {
+    state.nodes = state.nodes.concat(params)
   },
   deleteNodes(val) {
     for (let i = 0; i < state.nodes.length; i++) {
@@ -46,7 +50,6 @@ const mutations = {
     state.selectNodes = []
     state.nodes = copy(val)
     state.loading = state.loading + 1
-    console.log(state.nodes)
   },
   index: 0,
   history: [[]],
@@ -79,4 +82,4 @@ const mutations = {
     }
   }
 }
-export default { state, mutations }
+export default { state, mutations, bus: new Vue() }
