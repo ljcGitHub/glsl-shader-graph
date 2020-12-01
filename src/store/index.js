@@ -68,6 +68,7 @@ const mutations = {
       history.push(state.nodes)
       this.history = copy(history)
       this.index = history.length - 1
+      state.compile = false
     }
   },
   refresh() {

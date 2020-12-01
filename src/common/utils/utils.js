@@ -1,3 +1,5 @@
+const THREE = window.THREE
+
 // 获取uid
 export const guid = function () {
   return 'uidxxxxxxaxxxxb4xxxcyxxxdxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -37,9 +39,9 @@ export const vecSetValue = function (uid, _sourceVec, _targetVec) {
     if (targetVec === 2) return `vec3(${uid}.xy, 0.0)`
     if (targetVec === 4) return `vec3(${uid}.xyz)`
   } else if (sourceVec === 4) {
-    if (targetVec === 1) return `vec3(${uid}, ${uid}, ${uid}, ${uid})`
+    if (targetVec === 1) return `vec4(${uid}, ${uid}, ${uid}, ${uid})`
     if (targetVec === 2) return `vec4(${uid}.xy, 0.0, 0.0)`
-    if (targetVec === 3) return `vec3(${uid}.xyz, 0.0)`
+    if (targetVec === 3) return `vec4(${uid}.xyz, 0.0)`
   }
 }
 
@@ -49,17 +51,27 @@ export const findShaderNode = function (_uid, nodes) {
   const expressions = []
   const nodeNames = {}
   const nodeKeys = {}
+  const uniforms = {}
   nodes.forEach(item => {
     nodeKeys[item.value.uid] = item
   })
+
   const dg = function (uid) {
     const node = nodeKeys[uid]
     const vector = node.value.vector
-    if (!nodeNames[uid]) {
-      if (node.getCode) {
-        codes.push(node.getCode())
+    const name = node.$options.name
+    if (name === 'Texture2DAsset') {
+      const texture2DVec = node.getTexture2DVec()
+      const texture = new THREE.TextureLoader().load(node.texture2DUrl)
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+      uniforms[texture2DVec] = { value: texture }
+      node.getCode && codes.push(node.getCode())
+    } else {
+      if (!nodeNames[name]) {
+        node.getCode && codes.push(node.getCode())
       }
     }
+    nodeNames[name] = true
     expressions.push(node.getExpression())
     for (let x in vector) {
       if (x.indexOf('input') > -1) {
@@ -70,17 +82,21 @@ export const findShaderNode = function (_uid, nodes) {
     }
   }
   dg(_uid)
-  return { codes: codes.reverse(), expressions: expressions.reverse() }
+  return { codes: codes.reverse(), expressions: expressions.reverse(), uniforms }
 }
 
 // 转换script
 export const getShader = function (sn, position, fragColor) {
   let vertexShader = `
+    varying vec2 vUv;
+
     void main(){
+      vUv = uv;
       gl_Position = ${position};
     }
   `
   let fragmentShader = `
+    varying vec2 vUv;
     ${sn.codes.join('\n')}
 
     void main(){
@@ -89,7 +105,7 @@ export const getShader = function (sn, position, fragColor) {
     }
   `
 
-  return { vertexShader, fragmentShader }
+  return { vertexShader, fragmentShader, uniforms: sn.uniforms }
 }
 
 // 获取shader
@@ -101,6 +117,7 @@ export const getShaderBin = function () {
   console.log(shaderScript.fragmentShader)
   return {
     vertexShader: shaderScript.vertexShader,
-    fragmentShader: shaderScript.fragmentShader
+    fragmentShader: shaderScript.fragmentShader,
+    uniforms: shaderScript.uniforms
   }
 }

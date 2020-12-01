@@ -41,7 +41,7 @@ export default {
       canvas: this.$refs.canvas
     })
     renderer.setSize(140, 140)
-    camera.position.z = 1
+    camera.position.z = 2
     camera.target = new THREE.Vector3(0, 0, 0)
     scene.add(camera)
     this.scene = scene
@@ -56,14 +56,16 @@ export default {
       const shader = getShaderBin.apply(this)
       this.mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(1, 1, 1, 1),
-        createdShaderMaterial(shader.vertexShader, shader.fragmentShader)
+        createdShaderMaterial(shader.vertexShader, shader.fragmentShader, shader.uniforms)
       )
       this.scene.add(this.mesh)
     }
   },
   watch: {
     compile() {
-      this.showDebugger()
+      if (this.compile) {
+        this.showDebugger()
+      }
     }
   }
 }

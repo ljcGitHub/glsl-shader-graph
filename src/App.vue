@@ -31,6 +31,17 @@
 import { getVeotorRect } from 'common/utils/utils'
 import { style } from 'common/utils/dom'
 
+const getCace = function () {
+  const cace = window.localStorage.getItem('node')
+  if (cace) return JSON.parse(cace).data
+  return []
+}
+const setCace = function (node) {
+  window.localStorage.setItem('node', JSON.stringify({
+    data: node
+  }))
+}
+
 export default {
   name: 'app',
   computed: {
@@ -49,8 +60,13 @@ export default {
       links: []
     }
   },
-  watch: {
-    loading(val, oldVal) {
+  created() {
+    this.$state.nodes = getCace()
+    this.loadingLine()
+  },
+  methods: {
+    loadingLine() {
+      setCace(this.$state.nodes)
       this.links = []
       this.loadinger && clearTimeout(this.loadinger)
       this.loadinger = setTimeout(() => {
@@ -73,6 +89,11 @@ export default {
         }
         this.links = links
       }, 40)
+    }
+  },
+  watch: {
+    loading(val, oldVal) {
+      this.loadingLine()
     }
   }
 }

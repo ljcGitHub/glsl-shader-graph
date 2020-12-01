@@ -58,9 +58,9 @@ export default {
       const input1 = targetVector[`${uid}-input-2-i0`]
       const input2 = targetVector[`${uid}-input-2-i1`]
       const input3 = targetVector[`${uid}-input-2-i2`]
-      let reg1 = input1 ? vecSetValue(input1.target.replace(/-/g, '_'), 2, input1.vec) : 'vec2(0, 0)'
-      let reg2 = input2 ? vecSetValue(input2.target.replace(/-/g, '_'), 2, input2.vec) : 'vec2(0, 0)'
-      let reg3 = input3 ? vecSetValue(input3.target.replace(/-/g, '_'), 2, input3.vec) : 'vec2(0, 0)'
+      let reg1 = input1 ? vecSetValue(input1.target.replace(/-/g, '_'), 2, input1.vec) : 'gl_FragCoord.xy'
+      let reg2 = input2 ? vecSetValue(input2.target.replace(/-/g, '_'), 2, input2.vec) : 'vec2(1, 1)'
+      let reg3 = input3 ? vecSetValue(input3.target.replace(/-/g, '_'), 2, input3.vec) : 'vec2(1, 1)'
       return `
         vec2 ${uid} = TilingAndOffset(${reg1}, ${reg2}, ${reg3});
         vec2 ${uid}_output_2_i0 = ${uid};

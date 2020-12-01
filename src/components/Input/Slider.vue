@@ -7,6 +7,7 @@
           v-model="val"
           :show-tooltip="false"
           :format-tooltip="formatTooltip"
+          @change="change"
         ></el-slider>
         <span class="slider-tip slider-val">{{ value.vector.constValue }}</span>
       </div>
@@ -38,11 +39,13 @@ export default {
     if (!this.value.vector.constValue) {
       this.val = 50
       this.$set(this.value.vector, 'constValue', 0.5)
+    } else {
+      this.val = this.value.vector.constValue * 100
     }
   },
   data() {
     return {
-      val: 0.5,
+      val: 50,
       inputs: [],
       outputs: [{
         text: 'Out',
@@ -57,6 +60,18 @@ export default {
       const val = min + max * this.val / 100
       this.value.vector.constValue = val
       return val
+    },
+    getExpression() {
+      const value = this.value
+      const targetVector = value.vector
+      const uid = value.uid
+      return `
+        float ${uid} = ${targetVector.constValue};
+        float ${uid}_output_1_i0 = ${uid};
+      `
+    },
+    change() {
+      this.$mutations.commit('refresh')
     }
   }
 }

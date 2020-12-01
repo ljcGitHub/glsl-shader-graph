@@ -19,9 +19,9 @@ export var createdUniforms = function (uniforms) {
 const rafs = []
 function animate() {
   requestAnimationFrame(animate)
-  rafs.forEach(cb => cb())
   if (Store.state.compile) {
-    commonUniforms.u_time.value += 0.05
+    rafs.forEach(cb => cb())
+    commonUniforms.u_time.value += 0.0166
   } else {
     commonUniforms.u_time.value = 0
   }
@@ -42,6 +42,7 @@ export const createdShaderMaterial = function (vertexShader, fragmentShader, uni
   return new THREE.ShaderMaterial({
     uniforms: createdUniforms(uniforms),
     vertexShader: vertexShader,
-    fragmentShader: fragmentShader
+    fragmentShader: fragmentShader,
+    side: THREE.DoubleSide
   })
 }

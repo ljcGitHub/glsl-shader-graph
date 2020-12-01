@@ -74,7 +74,7 @@
       <div class="middle-icon" @click="prevStep" v-html="arrowLeft"></div>
       <div
         class="middle-icon"
-        v-if="$state.compile"
+        v-if="!$state.compile"
         v-html="play"
         @click="compileClose"
       ></div>
@@ -204,7 +204,7 @@ export default {
             }
             break
           case 'Space':
-            this.$state.compile ? this.compileClose() : this.compileShow()
+            this.$state.compile ? this.compileShow() : this.compileClose()
             break
           default:
             break
@@ -257,8 +257,16 @@ export default {
         copyNodesStr = copyNodesStr.replace(reg, newNodeUid)
         selectNodes.push(newNodeUid)
         for (const key in node.vector) {
-          const reg2 = new RegExp(node.vector[key].lineUid, 'g')
-          copyNodesStr = copyNodesStr.replace(reg2, guid())
+          if (key.indexOf('input') > -1) {
+            const reg2 = new RegExp(node.vector[key].lineUid, 'g')
+            copyNodesStr = copyNodesStr.replace(reg2, guid())
+          } else if (key.indexOf('output') > -1) {
+            const outputs = node.vector[key]
+            outputs.forEach(item => {
+              const reg2 = new RegExp(item.lineUid, 'g')
+              copyNodesStr = copyNodesStr.replace(reg2, guid())
+            })
+          }
         }
       }
       copyNodes = JSON.parse(copyNodesStr)
@@ -311,11 +319,11 @@ export default {
     },
     compileShow() {
       this.rightMenuHide()
-      this.$state.compile = true
+      this.$state.compile = false
     },
     compileClose() {
       this.rightMenuHide()
-      this.$state.compile = false
+      this.$state.compile = true
     },
     addNode(nodeName) {
       this.rightMenuHide()
