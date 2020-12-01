@@ -23,7 +23,7 @@
               :vec="input.vec"
               :tip="input.tip"
               :hideText="hideText"
-              :uid="`${value.uid}-input-${input.vec}-${$index}`"
+              :uid="`${value.uid}-input-${input.vec}-i${$index}`"
               type="input"
               ref="input"
               @vectorStart="(e, uid) => vectorStart(e, uid, input.vec, 'input')"
@@ -43,7 +43,7 @@
               :vec="output.vec"
               :tip="output.tip"
               :hideText="hideText"
-              :uid="`${value.uid}-output-${output.vec}-${$index}`"
+              :uid="`${value.uid}-output-${output.vec}-i${$index}`"
               type="output"
               ref="output"
               @vectorStart="
@@ -182,7 +182,7 @@ export default {
         pos2 = getVeotorRect(document.getElementById(uid)) // 自己坐标
         lining = createLink({ vec: targetNodes.vec, uid: guid(), pos: [pos1.x, pos1.y, pos2.x, pos2.y] })
         this.sourceUid = targetNodes.target
-        this.removeNodeUid(targetNodes.target)
+        this.removeNodeUid(targetNodes.target, uid)
         this.inputVectorMode = this.value.vector[uid]
         delete this.value.vector[uid]
       } else {
@@ -261,12 +261,10 @@ export default {
       const targetElement = document.querySelector('.vector:hover')
       if (targetElement) {
         const targetUid = targetElement.getAttribute('id')
-        const [targetNodeUid, targetType, targetVec] = targetUid.split('-')
-        const [sourceNodeUid, sourceType, sourceVec] = sourceUid.split('-')
+        const [targetNodeUid, targetType] = targetUid.split('-')
+        const [sourceNodeUid, sourceType] = sourceUid.split('-')
         if (targetNodeUid !== sourceNodeUid &&
-          targetType !== sourceType &&
-          targetVec === sourceVec
-        ) {
+          targetType !== sourceType) {
           return targetUid
         }
       }
@@ -274,7 +272,8 @@ export default {
     },
     setNodeUid(sourceUid, targetUid, liningUid) {
       const nodes = this.$state.nodes
-      const [targetNodeUid, targetType, targetVec] = targetUid.split('-')
+      const [targetNodeUid, targetType] = targetUid.split('-')
+      const sourceVec = sourceUid.split('-')[2]
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         if (node.uid === targetNodeUid) {
@@ -307,7 +306,7 @@ export default {
             node.vector[targetUid].push({
               lineUid: liningUid,
               type: targetType,
-              vec: targetVec,
+              vec: sourceVec,
               source: targetUid,
               target: sourceUid
             })
@@ -315,7 +314,7 @@ export default {
             node.vector[targetUid] = {
               lineUid: liningUid,
               type: targetType,
-              vec: targetVec,
+              vec: sourceVec,
               source: targetUid,
               target: sourceUid
             }
@@ -324,13 +323,26 @@ export default {
         }
       }
     },
-    removeNodeUid(targetUid) {
+    removeNodeUid(targetUid, sourceUid) {
       const nodes = this.$state.nodes
-      const [targetNodeUid] = targetUid.split('-')
+      const [targetNodeUid, targetNodeType] = targetUid.split('-')
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         if (node.uid === targetNodeUid) {
-          delete node.vector[targetUid]
+          if (targetNodeType === 'output') {
+            if (node.vector[targetUid].length > 1) {
+              const _tn = node.vector[targetUid]
+              for (let j = 0; j < _tn.length; j++) {
+                if (sourceUid === _tn[j].target) {
+                  node.vector[targetUid].splice(j, 1)
+                }
+              }
+            } else {
+              delete node.vector[targetUid]
+            }
+          } else {
+            delete node.vector[targetUid]
+          }
           break
         }
       }
@@ -357,14 +369,14 @@ export default {
     openPos() {
       const input = this.$refs.input
       const output = this.$refs.output
-      this.resetPos(input)
-      this.resetPos(output)
+      input && this.resetPos(input)
+      output && this.resetPos(output)
     },
     closePos() {
       const input = this.$refs.input
       const output = this.$refs.output
-      this.specifiedPos(input, -1)
-      this.specifiedPos(output)
+      input && this.specifiedPos(input, -1)
+      output && this.specifiedPos(output)
     },
     specifiedPos(nodes, direction = 1) {
       const _angle = 180 / (nodes.length + 1)

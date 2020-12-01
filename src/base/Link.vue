@@ -54,27 +54,7 @@ export default {
 
 .line {
   stroke-width: 2;
+  stroke: #b2b2b2;
   fill: none;
-
-  &.vec1 {
-    stroke: $vector-color;
-  }
-
-  &.vec2 {
-    stroke: $vector2-color;
-  }
-
-  &.vec3 {
-    stroke: $vector3-color;
-  }
-
-  &.vec4 {
-    stroke: $vector4-color;
-  }
-
-  &:hover {
-    cursor: pointer;
-    stroke: #fff;
-  }
 }
 </style>

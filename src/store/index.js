@@ -11,7 +11,8 @@ const state = Vue.observable({
     language: 'zh', // zh en
     lineStyle: 'straight-line' // straight-line直线 curve-line曲线
   },
-  loading: 0,
+  loading: 0, // 刷新次数
+  compile: false, // 是否编译次数
   selectNodes: [],
   selectNodeId: '', // 选中了节点Id
   nodes: [] // 节点

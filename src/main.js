@@ -3,8 +3,6 @@ import Element from 'element-ui'
 import App from './App.vue'
 import 'common/style/index.styl'
 import 'element-ui/lib/theme-chalk/index.css'
-import * as BaseComponents from 'base/zIndex'
-import * as Components from 'components/zIndex'
 import Store from './store/index'
 
 Vue.config.productionTip = false
@@ -14,12 +12,16 @@ Vue.prototype.$state = Store.state
 Vue.prototype.$mutations = Store.mutations
 Vue.prototype.$bus = Store.bus
 
-for (const x in Components) {
-  Vue.component(Components[x].name, Components[x])
-}
-for (const x in BaseComponents) {
-  Vue.component(BaseComponents[x].name, BaseComponents[x])
-}
+const BaseComponent = require.context('./base', true, /\.vue$/)
+const Component = require.context('./components', true, /\.vue$/)
+BaseComponent.keys().forEach(filePath => {
+  const cmp = BaseComponent(filePath)
+  Vue.component(cmp.default.name, cmp.default)
+})
+Component.keys().forEach(filePath => {
+  const cmp = Component(filePath)
+  Vue.component(cmp.default.name, cmp.default)
+})
 
 new Vue({
   render: h => h(App)

@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <BaseHeader></BaseHeader>
-    <div style="position: absolute;top: 40px;left: 0;z-index:-1">
+    <div style="position: absolute;top: 0px;left: 0;z-index:-1">
       <div style="color: #fff;" v-for="node in nodes" :key="node.uid + 's'">
         {{ `x:${node.x}, y:${node.y}, ${node.uid}`}}
       </div>
